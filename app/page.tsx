@@ -88,7 +88,6 @@ export default function Home() {
       </section>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-12">
-
         {availableFiles.length === 0 && !isLoading && (
           <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800">
             <p className="font-semibold">No CSV files found.</p>
