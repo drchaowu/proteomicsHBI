@@ -9,83 +9,97 @@ export default function AboutPage() {
         <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
           <div className="space-y-4">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
-              Overview
+              About
             </p>
             <h2 className="text-3xl sm:text-4xl font-semibold text-slate-900">
               Proteomics in Heart-Brain Interactions (HBI)
             </h2>
             <p className="text-lg text-slate-600">
-              This platform provides a searchable database containing results derived from
-              multi-cohort analyses of proteomics and its associations with MRI traits and
-              diseases. The four main categories of data are:
+              Proteomics in Heart-Brain Interactions (HBI) is an open, searchable results portal
+              accompanying an ongoing research study investigating the molecular links between
+              plasma proteomics, cardiac and brain MRI phenotypes, and cardiometabolic, neurological,
+              and psychiatric diseases.
             </p>
+            <p className="text-lg text-slate-600">
+              This platform provides interactive access to results derived from large-scale,
+              multi-cohort analyses, integrating observational associations and Mendelian
+              randomization to support hypothesis generation and translational research in heart-brain
+              biology.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold text-slate-900">Data Overview</h3>
+            <p className="text-slate-700">The results are organized into four primary categories:</p>
             <ol className="list-decimal list-inside space-y-2 text-slate-700">
               <li>
-                Cardiac MRI and Brain MRI Trait Associations: Correlations between imaging-derived
-                phenotypes (IDPs) for the heart and brain.
+                Cardiac and Brain MRI Trait Associations: Phenotypic correlations between cardiac and
+                brain imaging-derived phenotypes (IDPs).
               </li>
               <li>
-                Proteomics-MRI Trait Associations: Connections between plasma proteomics and
-                specific cardiac or brain MRI traits.
+                Proteomics-MRI Trait Associations: Associations between circulating plasma proteins
+                and cardiac or brain MRI traits.
               </li>
               <li>
-                Proteomics-Disease Incidence/Prevalence Associations: Relationships between
-                proteomics and the prevalence or incidence of cardiovascular, neurological, and
-                psychiatric diseases.
+                Proteomics-Disease Incidence and Prevalence Associations: Relationships between
+                plasma proteomics and the prevalence or incidence of cardiovascular, neurological,
+                and psychiatric diseases.
               </li>
               <li>
-                Proteomics-Disease Outcomes: Mendelian randomization and association results
-                highlighting links between proteomics and diseases.
+                Proteomics-Disease Outcomes: Association and Mendelian randomization analyses
+                evaluating potential causal links between plasma proteomics and disease outcomes.
               </li>
             </ol>
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-xl font-semibold text-slate-900">Who Can Use This Tool?</h3>
+            <h3 className="text-xl font-semibold text-slate-900">Intended Users</h3>
             <ul className="list-disc list-inside space-y-2 text-slate-700">
               <li>
-                Scientific Researchers: Investigating proteins, diseases, or imaging phenotypes
-                relevant to their work.
+                Scientific researchers studying proteomics, imaging genetics, cardiovascular or
+                neurological diseases
               </li>
               <li>
-                Clinicians and Translational Scientists: Exploring molecular mechanisms underlying
-                disease to identify biomarkers or therapeutic targets.
+                Clinicians and translational scientists interested in biomarker discovery, disease
+                mechanisms, or therapeutic target prioritization
               </li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold text-slate-900">How to Use the Platform</h3>
-            <ol className="list-decimal list-inside space-y-2 text-slate-700">
+            <ul className="list-disc list-inside space-y-2 text-slate-700">
               <li>
-                Navigate through the tabs corresponding to the four cohorts: MRI Traits
-                Associations, Proteomics-MRI Associations, Proteomics-Disease Associations, and
-                Proteomics-Disease Outcomes.
+                Navigate between sections corresponding to MRI traits, proteomics-MRI associations,
+                proteomics-disease associations, and disease outcomes.
               </li>
-              <li>Use the search bar to input a protein, disease, or MRI Trait of interest.</li>
-              <li>Filter results by dataset type to narrow your focus.</li>
+              <li>Use the global search bar to query proteins, diseases, or MRI traits of interest.</li>
+              <li>Apply filters to refine results by data category or analysis type.</li>
               <li>
-                Review the interactive results tables for details, including correlations, effect
-                sizes, and statistical significance.
+                Explore interactive tables reporting effect estimates, statistical significance, and
+                analysis metadata.
               </li>
-            </ol>
+            </ul>
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-xl font-semibold text-slate-900">Data Request and Approval</h3>
+            <h3 className="text-xl font-semibold text-slate-900">Data Access and Use</h3>
             <p className="text-slate-700">
-              As the associated manuscript is under review, the data presented here is not yet
-              publicly available. Researchers or individuals interested in using this data must
-              contact us for approval before accessing or utilizing it. Please include the
-              following in your request:
+              The accompanying manuscript is currently under peer review. Accordingly, the results
+              displayed on this platform are for research and exploratory use only and should not be
+              used for clinical decision-making.
+            </p>
+            <p className="text-slate-700">
+              Researchers interested in accessing or formally using these data are asked to contact
+              the study team for approval. Please include:
             </p>
             <ul className="list-disc list-inside space-y-2 text-slate-700">
-              <li>Your name and affiliation.</li>
-              <li>The purpose of your inquiry and intended data use.</li>
-              <li>Specific datasets or results you are interested in.</li>
+              <li>Name and institutional affiliation</li>
+              <li>Purpose and intended use of the data</li>
+              <li>Specific datasets or results of interest</li>
             </ul>
             <p className="text-slate-700">
-              Requests can be directed to{' '}
+              Contact:{' '}
               <a
                 className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4"
                 href="mailto:drchaowu@med.umich.edu"
@@ -99,54 +113,10 @@ export default function AboutPage() {
           <div className="space-y-3">
             <h3 className="text-xl font-semibold text-slate-900">Acknowledgments</h3>
             <p className="text-slate-700">
-              This platform is part of ongoing research efforts by Rosenzweig Lab to explore the
-              molecular underpinnings of heart-brain interactions using multi-omics approaches. We
-              thank all collaborators and study participants for their contributions to this work.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-slate-900">About</h3>
-            <p className="text-slate-700">
-              Proteomics in Heart-Brain Interactions (HBI) is a knowledge-sharing platform designed
-              to support scientific researchers in exploring the intricate relationships between
-              plasma proteomics, cardiac MRI traits, brain MRI traits, and their associations with
-              cardiovascular, neurological, and psychiatric diseases. This website accompanies a
-              research manuscript that is currently under review in a scientific journal and
-              offers an interactive, user-friendly interface for accessing detailed study results.
-            </p>
-            <p className="text-slate-700">
-              The website provides access to a rich dataset derived from multiple cohorts, grouped
-              into four main categories:
-            </p>
-            <ol className="list-decimal list-inside space-y-2 text-slate-700">
-              <li>
-                Cardiac MRI and Brain MRI Trait Associations: Examines phenotypic correlations
-                between cardiac and brain imaging-derived traits.
-              </li>
-              <li>
-                Proteomics-MRI Trait Associations: Investigates the relationships between plasma
-                proteins and imaging-derived phenotypes (IDPs) from cardiac and brain MRIs.
-              </li>
-              <li>
-                Proteomics-Disease Incidence/Prevalence Associations: Explores the associations
-                between plasma proteomics and disease prevalence or incidence in cardiovascular,
-                neurological, and psychiatric domains.
-              </li>
-              <li>
-                Proteomics-Disease Outcomes: Features association and Mendelian randomization
-                analyses to infer relationships between plasma proteomics and various diseases.
-              </li>
-            </ol>
-            <p className="text-slate-700">
-              Given that the accompanying manuscript has not yet been published, users interested
-              in accessing or utilizing the data presented on this platform must contact us for
-              approval. This ensures that data usage aligns with ethical research practices and
-              academic collaboration goals.
-            </p>
-            <p className="text-slate-700">
-              This resource aims to foster collaborative research and discovery by offering
-              comprehensive insights into proteomics in the context of heart-brain interactions.
+              This platform is part of ongoing research efforts within the Rosenzweig Lab, aimed at
+              elucidating the molecular and systems-level mechanisms underlying heart-brain
+              interactions using multi-omics and imaging data. We gratefully acknowledge all
+              collaborators and study participants whose contributions made this work possible.
             </p>
           </div>
         </section>
