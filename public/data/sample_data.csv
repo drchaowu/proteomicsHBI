@@ -1,7 +1,0 @@
-protein,gene,uniprot_id,disease,mri_phenotype,pvalue,beta,or,se,ci_lower,ci_upper
-IL6,IL6,P05231,Alzheimer's Disease,Hippocampal Volume,0.001,0.25,1.28,0.05,1.18,1.38
-TNF,TNF,P01375,Depression,White Matter Volume,0.003,0.18,1.20,0.04,1.12,1.28
-CRP,CRP,P02741,Cardiovascular Disease,Gray Matter Volume,0.002,0.22,1.25,0.06,1.13,1.37
-BDNF,BDNF,P23560,Depression,Hippocampal Volume,0.0001,-0.30,0.74,0.03,0.68,0.80
-APOE,APOE,P02649,Alzheimer's Disease,Total Brain Volume,0.00001,0.35,1.42,0.08,1.26,1.58
-

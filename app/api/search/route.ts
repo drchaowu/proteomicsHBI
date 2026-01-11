@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
     const searchTerm = searchParams.get('q') || '';
     const searchType = searchParams.get('type') || 'all';
     const filesParam = searchParams.get('files');
+    const filterTerm = searchParams.get('filter') || '';
+    const filterType = searchParams.get('filterType') || '';
 
     // Determine which fields to search based on type
     let searchFields: string[] = [];
@@ -24,13 +26,118 @@ export async function GET(request: NextRequest) {
         searchFields = ['protein', 'protein_name', 'gene', 'gene_name', 'uniprot_id'];
         break;
       case 'disease':
-        searchFields = ['disease', 'disease_name', 'outcome', 'phenotype'];
+        searchFields = [
+          'disease',
+          'disease_name',
+          'disease_category',
+          'disease_group',
+          'outcome',
+          'phenotype',
+        ];
         break;
       case 'mri':
-        searchFields = ['mri', 'mri_phenotype', 'imaging', 'brain_region', 'mri_trait'];
+        searchFields = [
+          'mri',
+          'mri_phenotype',
+          'mri_trait',
+          'mri_category',
+          'cmr_trait',
+          'cmr_category',
+          'bmr_trait',
+          'bmr_category',
+          'imaging',
+          'brain_region',
+        ];
         break;
       default:
         searchFields = []; // Search all fields
+    }
+
+    let filterFields: string[] = [];
+    switch (filterType) {
+      case 'protein':
+        filterFields = ['protein', 'protein_name', 'gene', 'gene_name', 'uniprot_id'];
+        break;
+      case 'disease':
+        filterFields = [
+          'disease',
+          'disease_name',
+          'disease_category',
+          'disease_group',
+          'outcome',
+          'phenotype',
+        ];
+        break;
+      case 'mri':
+        filterFields = [
+          'mri',
+          'mri_phenotype',
+          'mri_trait',
+          'mri_category',
+          'cmr_trait',
+          'cmr_category',
+          'bmr_trait',
+          'bmr_category',
+          'imaging',
+          'brain_region',
+        ];
+        break;
+      case 'disease_mri':
+        filterFields = [
+          'disease',
+          'disease_name',
+          'disease_category',
+          'disease_group',
+          'outcome',
+          'phenotype',
+          'mri',
+          'mri_phenotype',
+          'mri_trait',
+          'mri_category',
+          'cmr_trait',
+          'cmr_category',
+          'bmr_trait',
+          'bmr_category',
+          'imaging',
+          'brain_region',
+        ];
+        break;
+      case 'protein_disease':
+        filterFields = [
+          'protein',
+          'protein_name',
+          'gene',
+          'gene_name',
+          'uniprot_id',
+          'disease',
+          'disease_name',
+          'disease_category',
+          'disease_group',
+          'outcome',
+          'phenotype',
+        ];
+        break;
+      case 'protein_mri':
+        filterFields = [
+          'protein',
+          'protein_name',
+          'gene',
+          'gene_name',
+          'uniprot_id',
+          'mri',
+          'mri_phenotype',
+          'mri_trait',
+          'mri_category',
+          'cmr_trait',
+          'cmr_category',
+          'bmr_trait',
+          'bmr_category',
+          'imaging',
+          'brain_region',
+        ];
+        break;
+      default:
+        filterFields = [];
     }
 
     // Get list of CSV files
@@ -72,7 +179,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Perform search
-    const results = searchInData(allData, searchTerm, searchFields);
+    let results = searchInData(allData, searchTerm, searchFields);
+    if (filterTerm && filterFields.length > 0) {
+      results = searchInData(results, filterTerm, filterFields);
+    }
     const totalResults = results.reduce((sum, csvData) => sum + csvData.data.length, 0);
 
     return NextResponse.json({
@@ -103,4 +213,3 @@ export async function getFiles() {
     return NextResponse.json({ files: [] });
   }
 }
-

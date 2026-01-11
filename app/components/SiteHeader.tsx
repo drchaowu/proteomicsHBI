@@ -4,9 +4,7 @@ const navItems = [
   { label: 'Data Explorer', href: '/' },
   { label: 'Proteomics', href: '/proteomics' },
   { label: 'MRI Phenotypes', href: '/mri-phenotypes' },
-  { label: 'Disease Association', href: '/disease-association' },
-  { label: 'Disease Causality', href: '/disease-causality' },
-  { label: 'Download', href: '/download' },
+  { label: 'Disease Outcomes', href: '/disease-outcomes' },
   { label: 'About', href: '/about' },
 ];
 

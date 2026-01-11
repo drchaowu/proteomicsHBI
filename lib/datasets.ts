@@ -5,30 +5,36 @@ export interface DatasetGroup {
   match?: string[];
 }
 
+export const DATASET_TITLES: Record<string, string> = {
+  'mri_association.csv': 'MRI association',
+  'protein_mri_association.csv': 'Proteomics-MRI association',
+  'protein_prevalence.csv': 'Proteomics-disease prevalence',
+  'protein_incidence.csv': 'Proteomics-disease incidence',
+  'protein_disease_causality.csv': 'Proteomics-disease causality',
+  'associations.csv': 'Associations (legacy)',
+  'sample_data.csv': 'Sample data',
+};
+
 export const DATASET_GROUPS: DatasetGroup[] = [
   { label: 'All datasets', value: 'all' },
   {
     label: 'MRI association',
     value: 'mri-association',
-    match: ['mri', 'association'],
-    files: [],
+    files: ['mri_association.csv'],
   },
   {
     label: 'Protein-MRI association',
     value: 'protein-mri',
-    match: ['protein', 'mri'],
-    files: [],
+    files: ['protein_mri_association.csv'],
   },
   {
-    label: 'Protein-disease association',
-    value: 'protein-disease',
-    match: ['protein', 'disease', 'association'],
-    files: [],
+    label: 'Disease association',
+    value: 'disease-association',
+    files: ['protein_prevalence.csv', 'protein_incidence.csv'],
   },
   {
-    label: 'Protein-disease causality',
-    value: 'protein-disease-causality',
-    match: ['protein', 'disease', 'causal', 'causality', 'mr'],
-    files: [],
+    label: 'Disease causality',
+    value: 'disease-causality',
+    files: ['protein_disease_causality.csv'],
   },
 ];

@@ -1,6 +1,7 @@
 'use client';
 
 import { CSVData } from '@/lib/csvParser';
+import { DATASET_TITLES } from '@/lib/datasets';
 import { useState } from 'react';
 
 interface ResultsTableProps {
@@ -10,6 +11,32 @@ interface ResultsTableProps {
 
 export default function ResultsTable({ results, totalResults }: ResultsTableProps) {
   const [expandedFile, setExpandedFile] = useState<string | null>(null);
+
+  const formatValue = (value: unknown, header: string) => {
+    if (value === null || value === undefined || value === '') {
+      return '';
+    }
+
+    const raw = typeof value === 'string' ? value.trim() : value;
+    const numberValue = typeof raw === 'number' ? raw : Number(raw);
+    if (!Number.isFinite(numberValue)) {
+      return String(value);
+    }
+
+    const lowerHeader = header.toLowerCase();
+    const isPValue = lowerHeader.includes('pvalue') || lowerHeader.includes('p value');
+    const isCount = lowerHeader === 'n' || lowerHeader.includes('participants');
+
+    if (isCount) {
+      return String(Math.round(numberValue));
+    }
+
+    if (isPValue) {
+      return numberValue < 0.001 ? numberValue.toExponential(2) : numberValue.toFixed(3);
+    }
+
+    return numberValue.toFixed(2);
+  };
 
   if (results.length === 0) {
     return (
@@ -40,7 +67,9 @@ export default function ResultsTable({ results, totalResults }: ResultsTableProp
               <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Dataset
               </span>
-              <span className="font-semibold text-lg text-slate-900">{csvData.filename}</span>
+              <span className="font-semibold text-lg text-slate-900">
+                {DATASET_TITLES[csvData.filename] || csvData.filename}
+              </span>
               <span className="text-sm text-slate-500">
                 ({csvData.data.length} result{csvData.data.length !== 1 ? 's' : ''})
               </span>
@@ -78,7 +107,7 @@ export default function ResultsTable({ results, totalResults }: ResultsTableProp
                           key={hIdx}
                           className="px-4 py-3 text-sm text-slate-900 whitespace-nowrap"
                         >
-                          {String(row[header] || '')}
+                          {formatValue(row[header], header)}
                         </td>
                       ))}
                     </tr>

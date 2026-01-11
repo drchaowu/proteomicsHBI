@@ -1,184 +1,382 @@
 'use client';
 
 import { CSVData } from '@/lib/csvParser';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, LineChart, Line } from 'recharts';
+import { DATASET_TITLES } from '@/lib/datasets';
+import {
+  CartesianGrid,
+  ErrorBar,
+  ReferenceLine,
+  ResponsiveContainer,
+  Scatter,
+  ScatterChart,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 interface VisualizationProps {
   results: CSVData[];
 }
 
+type ForestDatum = {
+  label: string;
+  effect: number;
+  error: [number, number];
+  pvalue?: number;
+};
+
+type ForestBlock = {
+  title: string;
+  data: ForestDatum[];
+  effectLabel: string;
+};
+
+type HeatmapCell = {
+  effect: number;
+  pvalue?: number;
+};
+
+type HeatmapBlock = {
+  title: string;
+  rowLabel: string;
+  colLabel: string;
+  rows: string[];
+  cols: string[];
+  matrix: (HeatmapCell | null)[][];
+  min: number;
+  max: number;
+};
+
 export default function Visualization({ results }: VisualizationProps) {
-  // Try to find numeric columns that might be suitable for visualization
-  const findNumericColumns = (csvData: CSVData): string[] => {
-    if (csvData.data.length === 0) return [];
-    
-    const numericColumns: string[] = [];
-    csvData.headers.forEach(header => {
-      const sampleValue = csvData.data[0][header];
-      const numValue = Number(sampleValue);
-      if (!isNaN(numValue) && sampleValue !== null && sampleValue !== '') {
-        numericColumns.push(header);
+  const normalizeKey = (value: string) =>
+    value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+
+  const findColumn = (headers: string[], candidates: string[]) => {
+    const headerMap = new Map<string, string>();
+    headers.forEach((header) => {
+      const key = normalizeKey(header);
+      if (!headerMap.has(key)) {
+        headerMap.set(key, header);
       }
     });
-    return numericColumns;
-  };
 
-  // Try to find common visualization-friendly columns
-  const findVisualizationData = () => {
-    for (const csvData of results) {
-      if (csvData.data.length === 0) continue;
-      
-      // Look for common statistical columns
-      const pvalueCol = csvData.headers.find(h => 
-        h.toLowerCase().includes('pvalue') || 
-        h.toLowerCase().includes('p_value') ||
-        h.toLowerCase().includes('p-value')
-      );
-      const betaCol = csvData.headers.find(h => 
-        h.toLowerCase().includes('beta') || 
-        h.toLowerCase().includes('effect')
-      );
-      const orCol = csvData.headers.find(h => 
-        h.toLowerCase().includes('or') || 
-        h.toLowerCase().includes('odds')
-      );
-      const seCol = csvData.headers.find(h => 
-        h.toLowerCase().includes('se') || 
-        h.toLowerCase().includes('standard_error')
-      );
-      
-      // Try to find a label column (protein, gene, disease, etc.)
-      const labelCol = csvData.headers.find(h => 
-        ['protein', 'gene', 'disease', 'phenotype', 'trait', 'outcome'].some(term => 
-          h.toLowerCase().includes(term)
-        )
-      ) || csvData.headers[0];
-
-      if (pvalueCol || betaCol || orCol) {
-        const chartData = csvData.data.slice(0, 20).map(row => {
-          const dataPoint: any = {
-            label: String(row[labelCol] || ''),
-          };
-          
-          if (pvalueCol) dataPoint.pvalue = Number(row[pvalueCol]) || 0;
-          if (betaCol) dataPoint.beta = Number(row[betaCol]) || 0;
-          if (orCol) dataPoint.or = Number(row[orCol]) || 0;
-          if (seCol) dataPoint.se = Number(row[seCol]) || 0;
-          
-          return dataPoint;
-        }).filter(d => d.label);
-
-        return {
-          data: chartData,
-          pvalueCol,
-          betaCol,
-          orCol,
-          seCol,
-          filename: csvData.filename,
-        };
+    for (const candidate of candidates) {
+      const key = normalizeKey(candidate);
+      const match = headerMap.get(key);
+      if (match) {
+        return match;
       }
     }
-    return null;
+    return undefined;
   };
 
-  const vizData = findVisualizationData();
+  const toNumber = (value: unknown) => {
+    const num = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(num) ? num : null;
+  };
 
-  if (!vizData || vizData.data.length === 0) {
+  const formatPvalue = (value?: number) => {
+    if (value === undefined) return '';
+    return value < 0.001 ? value.toExponential(2) : value.toFixed(3);
+  };
+
+  const truncateLabel = (value: string, maxLength: number) => {
+    if (value.length <= maxLength) return value;
+    return `${value.slice(0, maxLength - 1)}…`;
+  };
+
+  const buildForestBlock = (csvData: CSVData): ForestBlock | null => {
+    const ciLowerCol = findColumn(csvData.headers, ['ci_lower', '95_ci_lower', 'ci_l']);
+    const ciUpperCol = findColumn(csvData.headers, ['ci_upper', '95_ci_upper', 'ci_u']);
+    const orCol = findColumn(csvData.headers, ['odds_ratio', 'oddsratio', 'or']);
+    const hrCol = findColumn(csvData.headers, ['hazard_ratio', 'hazardratio', 'hr']);
+    const pvalueCol = findColumn(csvData.headers, ['pvalue', 'p_value', 'p-value']);
+    const modelCol = findColumn(csvData.headers, ['model', 'analysis_model']);
+
+    const effectCol = orCol || hrCol;
+    if (!effectCol || !ciLowerCol || !ciUpperCol) {
+      return null;
+    }
+
+    const labelCol =
+      findColumn(csvData.headers, ['disease', 'protein', 'outcome', 'trait']) ||
+      csvData.headers[0];
+
+    let rows = csvData.data
+      .map((row) => {
+        const effect = toNumber(row[effectCol]);
+        const lower = toNumber(row[ciLowerCol]);
+        const upper = toNumber(row[ciUpperCol]);
+        const pvalue = pvalueCol ? toNumber(row[pvalueCol]) ?? undefined : undefined;
+        const baseLabel = String(row[labelCol] || '').trim();
+        const model = modelCol ? String(row[modelCol] || '').trim() : '';
+        if (!baseLabel || effect === null || lower === null || upper === null) {
+          return null;
+        }
+
+        const label = model ? `${baseLabel} (${model})` : baseLabel;
+        const lowError = Math.max(0, effect - lower);
+        const highError = Math.max(0, upper - effect);
+
+        return {
+          label,
+          effect,
+          error: [lowError, highError] as [number, number],
+          pvalue,
+        };
+      })
+      .filter((row): row is ForestDatum => Boolean(row));
+
+    const isCausality = csvData.filename.toLowerCase().includes('causality');
+    if (isCausality && pvalueCol && rows.length > 0) {
+      rows = rows.sort((a, b) => (a.pvalue ?? 1) - (b.pvalue ?? 1)).slice(0, 1);
+    } else {
+      rows = rows.slice(0, 20);
+    }
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    const title = DATASET_TITLES[csvData.filename] || csvData.filename;
+    return {
+      title,
+      data: rows,
+      effectLabel: orCol ? 'Odds Ratio' : 'Hazard Ratio',
+    };
+  };
+
+  const buildHeatmapBlock = (csvData: CSVData): HeatmapBlock | null => {
+    const betaCol = findColumn(csvData.headers, ['beta', 'effect', 'correlation_coefficient']);
+    const pvalueCol = findColumn(csvData.headers, ['pvalue', 'p_value', 'p-value']);
+    if (!betaCol) {
+      return null;
+    }
+
+    const rowCol =
+      findColumn(csvData.headers, ['cmr_trait', 'protein', 'mri_trait']) ||
+      findColumn(csvData.headers, ['cmr_idp', 'protein', 'mri_idp']);
+    const colCol =
+      findColumn(csvData.headers, ['bmr_trait', 'mri_trait', 'cmr_trait']) ||
+      findColumn(csvData.headers, ['bmr_idp', 'mri_idp', 'cmr_idp']);
+
+    if (!rowCol || !colCol || rowCol === colCol) {
+      return null;
+    }
+
+    const pairStats = new Map<
+      string,
+      { sum: number; count: number; minP?: number }
+    >();
+    const rowCounts = new Map<string, number>();
+    const colCounts = new Map<string, number>();
+
+    csvData.data.forEach((row) => {
+      const rowLabel = String(row[rowCol] || '').trim();
+      const colLabel = String(row[colCol] || '').trim();
+      const value = toNumber(row[betaCol]);
+      if (!rowLabel || !colLabel || value === null) {
+        return;
+      }
+
+      const pvalue = pvalueCol ? toNumber(row[pvalueCol]) ?? undefined : undefined;
+      const key = `${rowLabel}||${colLabel}`;
+      const current = pairStats.get(key) || { sum: 0, count: 0, minP: undefined };
+      current.sum += value;
+      current.count += 1;
+      if (pvalue !== undefined) {
+        current.minP = current.minP === undefined ? pvalue : Math.min(current.minP, pvalue);
+      }
+      pairStats.set(key, current);
+      rowCounts.set(rowLabel, (rowCounts.get(rowLabel) || 0) + 1);
+      colCounts.set(colLabel, (colCounts.get(colLabel) || 0) + 1);
+    });
+
+    const rows = Array.from(rowCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([label]) => label);
+    const cols = Array.from(colCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([label]) => label);
+
+    if (rows.length === 0 || cols.length === 0) {
+      return null;
+    }
+
+    const values: number[] = [];
+    const matrix = rows.map((rowLabel) =>
+      cols.map((colLabel) => {
+        const key = `${rowLabel}||${colLabel}`;
+        const stat = pairStats.get(key);
+        if (!stat) {
+          return null;
+        }
+        const avg = stat.sum / stat.count;
+        values.push(avg);
+        return { effect: avg, pvalue: stat.minP };
+      })
+    );
+
+    const min = values.length > 0 ? Math.min(...values) : 0;
+    const max = values.length > 0 ? Math.max(...values) : 0;
+
+    const title = DATASET_TITLES[csvData.filename] || csvData.filename;
+    return {
+      title,
+      rowLabel: rowCol,
+      colLabel: colCol,
+      rows,
+      cols,
+      matrix,
+      min,
+      max,
+    };
+  };
+
+  const getHeatmapColor = (value: number | null, min: number, max: number) => {
+    if (value === null) {
+      return '#f1f5f9';
+    }
+    const maxAbs = Math.max(Math.abs(min), Math.abs(max), 0.000001);
+    const normalized = value / maxAbs;
+    const clamp = Math.max(-1, Math.min(1, normalized));
+    if (clamp >= 0) {
+      const intensity = Math.round(255 - clamp * 155);
+      return `rgb(239, ${intensity}, ${intensity})`;
+    }
+    const intensity = Math.round(255 - Math.abs(clamp) * 155);
+    return `rgb(${intensity}, ${intensity}, 239)`;
+  };
+
+  const forestBlocks = results
+    .map((csvData) => buildForestBlock(csvData))
+    .filter((block): block is ForestBlock => Boolean(block));
+  const heatmapBlocks = results
+    .map((csvData) => buildHeatmapBlock(csvData))
+    .filter((block): block is HeatmapBlock => Boolean(block));
+
+  if (forestBlocks.length === 0 && heatmapBlocks.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        <p>No suitable data found for visualization. Ensure your CSV files contain numeric columns like p-values, beta, or odds ratios.</p>
+        <p>No suitable data found for visualization.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-semibold">Visualization: {vizData.filename}</h3>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* P-value distribution */}
-        {vizData.pvalueCol && (
+    <div className="space-y-8">
+      {heatmapBlocks.map((block) => (
+        <div key={`heatmap-${block.title}`} className="space-y-4">
+          <h3 className="text-xl font-semibold text-slate-900">{block.title} heatmap</h3>
           <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <h4 className="text-lg font-medium mb-4">P-value Distribution</h4>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={vizData.data.slice(0, 15)}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="label" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={100}
-                  interval={0}
-                />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="pvalue" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <p className="text-sm text-slate-600">
+                {block.rowLabel} × {block.colLabel}
+              </p>
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <span>{block.min.toFixed(2)}</span>
+                <div className="h-2 w-32 rounded-full bg-gradient-to-r from-blue-200 via-slate-100 to-rose-200" />
+                <span>{block.max.toFixed(2)}</span>
+              </div>
+            </div>
+            <div className="overflow-auto">
+              <div
+                className="grid gap-px bg-slate-200"
+                style={{
+                  gridTemplateColumns: `180px repeat(${block.cols.length}, minmax(90px, 1fr))`,
+                }}
+              >
+                <div className="bg-white p-2 text-xs font-semibold text-slate-500">
+                  {block.rowLabel} / {block.colLabel}
+                </div>
+                {block.cols.map((col) => (
+                  <div
+                    key={`col-${col}`}
+                    className="bg-white p-2 text-xs font-semibold text-slate-600"
+                  >
+                    {col}
+                  </div>
+                ))}
+                {block.rows.map((rowLabel, rowIdx) => (
+                  <div key={`row-${rowLabel}`} className="contents">
+                    <div className="bg-white p-2 text-xs font-semibold text-slate-600">
+                      {rowLabel}
+                    </div>
+                    {block.cols.map((colLabel, colIdx) => {
+                      const cell = block.matrix[rowIdx][colIdx];
+                      const color = getHeatmapColor(
+                        cell?.effect ?? null,
+                        block.min,
+                        block.max
+                      );
+                      return (
+                        <div
+                          key={`${rowLabel}-${colLabel}`}
+                          className="p-2 text-[11px] text-slate-900 text-center leading-tight"
+                          style={{ backgroundColor: color }}
+                          title={
+                            cell
+                              ? `${rowLabel} × ${colLabel}: ${cell.effect.toFixed(3)} (p=${formatPvalue(cell.pvalue)})`
+                              : 'No data'
+                          }
+                        >
+                          {cell ? (
+                            <>
+                              <div className="font-semibold">{cell.effect.toFixed(2)}</div>
+                              <div className="text-slate-600">p={formatPvalue(cell.pvalue)}</div>
+                            </>
+                          ) : (
+                            '—'
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        )}
+        </div>
+      ))}
 
-        {/* Beta/Effect size */}
-        {vizData.betaCol && (
+      {forestBlocks.map((block) => (
+        <div key={`forest-${block.title}`} className="space-y-4">
+          <h3 className="text-xl font-semibold text-slate-900">{block.title} forest plot</h3>
           <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <h4 className="text-lg font-medium mb-4">Effect Size (Beta)</h4>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={vizData.data.slice(0, 15)}>
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <p className="text-sm text-slate-600">{block.effectLabel} with 95% CI</p>
+            </div>
+            <ResponsiveContainer width="100%" height={60 + block.data.length * 40}>
+              <ScatterChart layout="vertical" margin={{ left: 160, right: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="label" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={100}
-                  interval={0}
+                <XAxis type="number" dataKey="effect" />
+                <YAxis
+                  type="category"
+                  dataKey="label"
+                  width={200}
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(value) => truncateLabel(String(value), 28)}
                 />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="beta" fill="#10b981" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Odds Ratio */}
-        {vizData.orCol && (
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <h4 className="text-lg font-medium mb-4">Odds Ratio</h4>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={vizData.data.slice(0, 15)}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="label" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={100}
-                  interval={0}
+                <Tooltip
+                  formatter={(value: number, name: string, entry: any) => {
+                    if (name === 'effect') {
+                      return [value.toFixed(3), block.effectLabel];
+                    }
+                    return [value, name];
+                  }}
+                  labelFormatter={(label) => label}
                 />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="or" fill="#f59e0b" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Scatter plot: Beta vs P-value */}
-        {vizData.betaCol && vizData.pvalueCol && (
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <h4 className="text-lg font-medium mb-4">Effect Size vs P-value</h4>
-            <ResponsiveContainer width="100%" height={300}>
-              <ScatterChart>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" dataKey="beta" name="Beta" />
-                <YAxis type="number" dataKey="pvalue" name="P-value" />
-                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                <Scatter data={vizData.data} fill="#8b5cf6" />
+                <ReferenceLine x={1} stroke="#94a3b8" strokeDasharray="3 3" />
+                <Scatter data={block.data} fill="#0ea5e9">
+                  <ErrorBar dataKey="error" width={4} direction="x" stroke="#0ea5e9" />
+                </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
           </div>
-        )}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }
-

@@ -102,6 +102,15 @@ export function searchInData(
     .split(/\s+/)
     .filter(Boolean);
 
+  const escapeRegExp = (value: string) =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const matchesTerm = (value: string, term: string) => {
+    const pattern = `\\b${escapeRegExp(term)}\\b`;
+    const regex = new RegExp(pattern, 'i');
+    return regex.test(value);
+  };
+
   return data
     .map((csvData) => {
       const headerLookup = new Map(
@@ -118,7 +127,7 @@ export function searchInData(
       const filteredData = csvData.data.filter((row) =>
         fieldsToSearch.some((field) => {
           const value = String(row[field] ?? '').toLowerCase();
-          return terms.every((term) => value.includes(term));
+          return terms.every((term) => matchesTerm(value, term));
         })
       );
 
@@ -149,4 +158,3 @@ export function getUniqueValues(data: CSVData[], columnName: string): string[] {
   
   return Array.from(values).sort();
 }
-

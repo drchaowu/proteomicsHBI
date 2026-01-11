@@ -6,7 +6,7 @@ export default function DiseaseCausalityPage() {
   return (
     <>
       <SiteHeader />
-      <SectionPage title="Disease Causality" />
+      <SectionPage title="Disease outcomes" />
       <SiteFooter />
     </>
   );

@@ -19,6 +19,7 @@ export default function SectionPage({ title, enableDownload = false }: SectionPa
   const [availableFiles, setAvailableFiles] = useState<string[]>([]);
   const [lastQuery, setLastQuery] = useState('');
   const [lastType, setLastType] = useState('all');
+  const [viewMode, setViewMode] = useState<'table' | 'figure'>('table');
 
   useEffect(() => {
     fetch('/api/files')
@@ -27,7 +28,13 @@ export default function SectionPage({ title, enableDownload = false }: SectionPa
       .catch((err) => console.error('Error loading files:', err));
   }, []);
 
-  const handleSearch = async ({ query, type, files }: SearchFilters) => {
+  const handleSearch = async ({
+    query,
+    type,
+    files,
+    filter,
+    filterType,
+  }: SearchFilters) => {
     const trimmed = query.trim();
     setHasSearched(true);
     setIsLoading(true);
@@ -42,6 +49,12 @@ export default function SectionPage({ title, enableDownload = false }: SectionPa
 
       if (files.length > 0) {
         params.set('files', files.join(','));
+      }
+      if (filter) {
+        params.set('filter', filter);
+      }
+      if (filterType) {
+        params.set('filterType', filterType);
       }
 
       const response = await fetch(`/api/search?${params}`);
@@ -111,7 +124,44 @@ export default function SectionPage({ title, enableDownload = false }: SectionPa
               onSearch={handleSearch}
               isLoading={isLoading}
               availableFiles={availableFiles}
-            />
+              searchPlaceholder={
+                title === 'Proteomics'
+                  ? 'Search proteins...'
+                  : title === 'MRI Phenotypes'
+                    ? 'Search MRI traits...'
+                    : title === 'Disease outcomes'
+                      ? 'Search diseases...'
+                      : undefined
+              }
+              fixedType={
+                title === 'Proteomics'
+                  ? 'protein'
+                  : title === 'MRI Phenotypes'
+                    ? 'mri'
+                      : title === 'Disease outcomes'
+                        ? 'disease'
+                        : undefined
+                }
+                showTypeSelector={false}
+                secondaryFilter={
+                  title === 'Proteomics'
+                    ? {
+                        placeholder: 'Filter by disease or MRI trait...',
+                        type: 'disease_mri',
+                      }
+                    : title === 'MRI Phenotypes'
+                      ? {
+                          placeholder: 'Filter by protein or MRI trait...',
+                          type: 'protein_mri',
+                        }
+                      : title === 'Disease outcomes'
+                        ? {
+                            placeholder: 'Filter by protein...',
+                            type: 'protein',
+                          }
+                        : undefined
+                }
+              />
           </aside>
           <div className="flex-1 space-y-6">
             {hasSearched && (
@@ -126,25 +176,53 @@ export default function SectionPage({ title, enableDownload = false }: SectionPa
                         <span className="ml-2">· {totalResults} results</span>
                       )}
                     </div>
-                    {enableDownload && totalResults > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleDownload}
-                        className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition"
-                      >
-                        Download CSV
-                      </button>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-1">
+                        <button
+                          type="button"
+                          onClick={() => setViewMode('table')}
+                          className={`px-3 py-1 text-xs font-semibold rounded-full transition ${
+                            viewMode === 'table'
+                              ? 'bg-slate-900 text-white'
+                              : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                        >
+                          Table
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setViewMode('figure')}
+                          className={`px-3 py-1 text-xs font-semibold rounded-full transition ${
+                            viewMode === 'figure'
+                              ? 'bg-slate-900 text-white'
+                              : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                        >
+                          Figures
+                        </button>
+                      </div>
+                      {enableDownload && totalResults > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleDownload}
+                          className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition"
+                        >
+                          Download CSV
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
-                {searchResults.length > 0 && (
+                {searchResults.length > 0 && viewMode !== 'table' && (
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <Visualization results={searchResults} />
                   </div>
                 )}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                  <ResultsTable results={searchResults} totalResults={totalResults} />
-                </div>
+                {viewMode !== 'figure' && (
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <ResultsTable results={searchResults} totalResults={totalResults} />
+                  </div>
+                )}
               </div>
             )}
           </div>
