@@ -22,7 +22,7 @@ type ForestDatum = {
   label: string;
   effect: number;
   error: [number, number];
-  pvalue?: number;
+  pvalue: number | undefined;
 };
 
 type ForestBlock = {

@@ -1,172 +1,107 @@
-# Proteomics Research Portal
+# Proteomics in Heart-Brain Interactions (HBI)
 
-A web application for searching and visualizing proteomics research results, including association studies and MR (Mendelian Randomization) causal relationship analyses.
+A Next.js web portal for exploring multi-cohort proteomics associations with MRI traits and disease outcomes. The site provides searchable tables and purpose-built visualizations (heatmaps and forest plots) to support discovery and review.
 
-## Features
+## Highlights
 
-- 🔍 **Advanced Search**: Search across multiple CSV files by proteins, diseases, or MRI phenotypes
-- 📊 **Data Visualization**: Automatic visualization of statistical results (p-values, effect sizes, odds ratios)
-- 📋 **Interactive Tables**: Expandable tables showing detailed results from each CSV file
-- 🎯 **Filtered Search**: Filter search results by type (proteins, diseases, MRI phenotypes, or all)
-- 📁 **Multi-file Support**: Automatically scans and searches all CSV files in the data directory
+- Search by protein, MRI trait, or disease with a secondary filter to refine results.
+- Dataset-aware filtering to focus on specific cohorts.
+- Interactive tables with rounded numeric values.
+- Heatmaps for MRI and protein–MRI associations.
+- Forest plots for disease prevalence/incidence/causality with 95% CI.
 
-## Getting Started
+## Datasets
 
-### Prerequisites
+The portal is organized around four dataset families:
 
-- Node.js 18+ 
-- npm or yarn
+1. **Cardiac MRI & Brain MRI Trait Associations**
+2. **Proteomics–MRI Trait Associations**
+3. **Proteomics–Disease Incidence/Prevalence Associations**
+4. **Proteomics–Disease Causal Inferences (MR)**
 
-### Installation
+## Data Preparation
 
-1. Install dependencies:
+Place CSVs in `public/data`. The app will automatically read and search all CSV files it finds.
+
+### Expected CSV Files
+
+- `mri_association.csv`
+- `protein_mri_association.csv`
+- `protein_prevalence.csv`
+- `protein_incidence.csv`
+- `protein_disease_causality.csv`
+
+### Recommended Columns
+
+Use these headers for best search and visualization behavior:
+
+**Common identifiers**
+- `protein`, `gene`, `uniprot_id`
+- `mri_trait`, `cmr_trait`, `bmr_trait`
+- `disease`, `disease_category`, `disease_group`
+
+**Statistics**
+- `beta` (correlation/effect size)
+- `pvalue`
+- `odds_ratio`, `hazard_ratio`
+- `ci_lower`, `ci_upper`
+- `n`
+
+## Convert Excel to CSV
+
+If you maintain data in Excel sheets, use the provided conversion script:
+
 ```bash
-npm install
+python3 scripts/convert_results.py --excel /path/to/results.xlsx --output-dir public/data
 ```
 
-2. Add your CSV files to the `public/data` directory
+This script:
+- Renames columns to match the expected schema
+- Removes duplicate rows
+- Writes per-sheet CSVs to `public/data`
 
-3. Start the development server:
+## Running Locally
+
 ```bash
+npm install
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
-
-## CSV File Format
-
-Place your CSV files in the `public/data` directory. The application will automatically detect and index all CSV files.
-
-### Recommended Column Names
-
-For optimal search results, use these column naming conventions:
-
-**Proteins:**
-- `protein`, `protein_name`, `gene`, `gene_name`, `uniprot_id`
-
-**Diseases:**
-- `disease`, `disease_name`, `outcome`, `phenotype`
-
-**MRI Phenotypes:**
-- `mri`, `mri_phenotype`, `imaging`, `brain_region`, `mri_trait`
-
-**Statistical Results:**
-- `pvalue`, `p_value`, `p-value` (for p-values)
-- `beta`, `effect` (for effect sizes)
-- `or`, `odds_ratio` (for odds ratios)
-- `se`, `standard_error` (for standard errors)
-- `ci_lower`, `ci_upper` (for confidence intervals)
-
-### Example CSV Structure
-
-```csv
-protein,gene,disease,mri_phenotype,pvalue,beta,or,se
-IL6,IL6,Alzheimer's Disease,Hippocampal Volume,0.001,0.25,1.28,0.05
-TNF,TNF,Depression,White Matter Volume,0.003,0.18,1.20,0.04
-```
-
-A sample CSV file (`sample_data.csv`) is included in `public/data` for reference.
-
-## Dataset Grouping (Filters)
-
-The dataset filter in the search bar groups files by name. You can make this explicit by editing `lib/datasets.ts`:
-
-- Use `files: []` to list exact CSV filenames (recommended).
-- Or use `match: []` tokens to group by keyword when filenames are not fixed.
-
-Example:
-
-```ts
-{
-  label: 'Protein-MRI association',
-  value: 'protein-mri',
-  files: ['protein_mri_association.csv'],
-}
-```
-
-## Usage
-
-1. **Search**: Enter a search term in the search bar (e.g., protein name, disease, or MRI phenotype)
-2. **Filter**: Select a search type from the dropdown (Proteins, Diseases, MRI Phenotypes, or All Types)
-3. **View Results**: 
-   - Results are displayed in expandable tables grouped by CSV file
-   - Click on a file header to expand/collapse its results
-   - Toggle visualizations on/off using the checkbox
-4. **Visualizations**: The app automatically detects numeric columns and creates visualizations for:
-   - P-value distributions
-   - Effect sizes (Beta)
-   - Odds ratios
-   - Scatter plots (e.g., Beta vs P-value)
+Open http://localhost:3000
 
 ## Project Structure
 
 ```
-project_proteomics/
-├── app/
-│   ├── api/
-│   │   ├── search/        # Search API endpoint
-│   │   └── files/         # Files list API endpoint
-│   ├── components/
-│   │   ├── SearchBar.tsx      # Search input component
-│   │   ├── ResultsTable.tsx   # Results display component
-│   │   └── Visualization.tsx  # Chart visualization component
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Main page
-├── lib/
-│   ├── csvParser.ts       # CSV parsing utilities
-│   └── dataLoader.ts      # Data loading utilities
-└── public/
-    └── data/              # Place your CSV files here
+app/
+  api/search/route.ts      # Search API
+  components/              # UI components
+lib/
+  csvParser.ts             # CSV parsing + search
+public/data/               # CSV datasets
+scripts/
+  convert_results.py       # Excel → CSV conversion
 ```
 
-## Technologies Used
+## Data Access Notice
 
-- **Next.js 16**: React framework
-- **TypeScript**: Type safety
-- **Tailwind CSS**: Styling
-- **PapaParse**: CSV parsing
-- **Recharts**: Data visualization
+The accompanying manuscript is under review. Data shown on the website is not yet publicly available. For access or reuse, please contact:
 
-## Building for Production
+drchaowu@med.umich.edu
 
-```bash
-npm run build
-npm start
-```
+Include:
+- Name and affiliation
+- Intended use
+- Specific datasets or results requested
 
-## Deploying (GitHub + Vercel)
+## Tech Stack
 
-Yes, GitHub + Vercel is a good deployment path for this project.
-
-1. Push your repo to GitHub.
-2. In Vercel, click “New Project” and import the repo.
-3. Framework will be detected as Next.js. Keep default build settings.
-4. Deploy. Each push to the default branch triggers a new deploy.
-
-Notes:
-- Files in `public/data` are bundled at build time. If you update datasets, redeploy.
-- For frequently changing datasets, consider hosting them externally and wiring a server-side fetch.
-
-## Customization
-
-### Adding More Search Fields
-
-Edit `app/api/search/route.ts` to add more field names to the search field arrays:
-
-```typescript
-case 'protein':
-  searchFields = ['protein', 'protein_name', 'gene', 'gene_name', 'uniprot_id', 'your_new_field'];
-  break;
-```
-
-### Customizing Visualizations
-
-Edit `app/components/Visualization.tsx` to add new chart types or modify existing ones.
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- PapaParse
+- Recharts
 
 ## License
 
-See LICENSE file for details.
-
-## Support
-
-For issues or questions, please check the documentation in `public/data/README.md` or review the code comments.
+See `LICENSE`.
