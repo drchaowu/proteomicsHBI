@@ -80,9 +80,22 @@ export default function Visualization({ results }: VisualizationProps) {
     return value < 0.001 ? value.toExponential(2) : value.toFixed(3);
   };
 
-  const truncateLabel = (value: string, maxLength: number) => {
-    if (value.length <= maxLength) return value;
-    return `${value.slice(0, maxLength - 1)}…`;
+  const wrapLabel = (value: string, maxChars: number) => {
+    const words = value.split(/\s+/).filter(Boolean);
+    if (words.length === 0) return [''];
+    const lines: string[] = [];
+    let current = words[0];
+    for (let i = 1; i < words.length; i += 1) {
+      const next = words[i];
+      if ((current + ' ' + next).length > maxChars) {
+        lines.push(current);
+        current = next;
+      } else {
+        current = `${current} ${next}`;
+      }
+    }
+    lines.push(current);
+    return lines;
   };
 
   const buildForestBlock = (csvData: CSVData): ForestBlock | null => {
@@ -348,16 +361,32 @@ export default function Visualization({ results }: VisualizationProps) {
             <div className="flex items-center justify-between gap-4 mb-4">
               <p className="text-sm text-slate-600">{block.effectLabel} with 95% CI</p>
             </div>
-            <ResponsiveContainer width="100%" height={60 + block.data.length * 40}>
-              <ScatterChart layout="vertical" margin={{ left: 160, right: 30 }}>
+            <ResponsiveContainer width="100%" height={90 + block.data.length * 58}>
+              <ScatterChart layout="vertical" margin={{ left: 230, right: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" dataKey="effect" />
                 <YAxis
                   type="category"
                   dataKey="label"
-                  width={200}
-                  tick={{ fontSize: 11 }}
-                  tickFormatter={(value) => truncateLabel(String(value), 28)}
+                  width={210}
+                  tick={({ x, y, payload }) => {
+                    const lines = wrapLabel(String(payload.value), 30);
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        textAnchor="end"
+                        fill="#475569"
+                        fontSize={11}
+                      >
+                        {lines.map((line, index) => (
+                          <tspan key={index} x={x} dy={index === 0 ? 4 : 12}>
+                            {line}
+                          </tspan>
+                        ))}
+                      </text>
+                    );
+                  }}
                 />
                 <Tooltip
                   formatter={(value, name) => {
