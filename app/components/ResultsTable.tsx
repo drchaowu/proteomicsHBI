@@ -86,7 +86,7 @@ export default function ResultsTable({ results, totalResults }: ResultsTableProp
           
           {expandedFile === csvData.filename && (
             <div className="p-6 overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
+              <table className="min-w-full divide-y divide-slate-200 tabular-nums">
                 <thead className="bg-slate-50">
                   <tr>
                     {csvData.headers.map((header, hIdx) => (
