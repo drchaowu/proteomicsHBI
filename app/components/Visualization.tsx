@@ -22,7 +22,7 @@ type ForestDatum = {
   label: string;
   effect: number;
   error: [number, number];
-  pvalue: number | undefined;
+  pvalue?: number;
 };
 
 type ForestBlock = {
@@ -360,11 +360,16 @@ export default function Visualization({ results }: VisualizationProps) {
                   tickFormatter={(value) => truncateLabel(String(value), 28)}
                 />
                 <Tooltip
-                  formatter={(value: number, name: string, entry: any) => {
+                  formatter={(value, name) => {
                     if (name === 'effect') {
-                      return [value.toFixed(3), block.effectLabel];
+                      const numeric =
+                        typeof value === 'number' ? value : Number(value ?? NaN);
+                      const display = Number.isFinite(numeric)
+                        ? numeric.toFixed(3)
+                        : '—';
+                      return [display, block.effectLabel];
                     }
-                    return [value, name];
+                    return [String(value ?? '—'), String(name)];
                   }}
                   labelFormatter={(label) => label}
                 />
