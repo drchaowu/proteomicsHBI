@@ -5,9 +5,7 @@ export default function SiteFooter() {
         <p>
           If you use data from this website, please cite our publication. (Citation details coming soon.)
         </p>
-        <p className="text-xs text-slate-400">
-          Version 0.1.0 · Released 2025-01-10
-        </p>
+        <p className="text-xs text-slate-400">Version 0.1.1 · Released 2026-01-12</p>
       </div>
     </footer>
   );

@@ -114,6 +114,10 @@ export default function Visualization({ results }: VisualizationProps) {
     const labelCol =
       findColumn(csvData.headers, ['disease', 'protein', 'outcome', 'trait']) ||
       csvData.headers[0];
+    const diseaseCol = findColumn(csvData.headers, ['disease', 'outcome']);
+    const proteinCol = findColumn(csvData.headers, ['protein', 'gene']);
+
+    const isCausality = csvData.filename.toLowerCase().includes('causality');
 
     let rows = csvData.data
       .map((row) => {
@@ -123,11 +127,14 @@ export default function Visualization({ results }: VisualizationProps) {
         const pvalue = pvalueCol ? toNumber(row[pvalueCol]) ?? undefined : undefined;
         const baseLabel = String(row[labelCol] || '').trim();
         const model = modelCol ? String(row[modelCol] || '').trim() : '';
+        const disease = diseaseCol ? String(row[diseaseCol] || '').trim() : '';
+        const proteinRaw = proteinCol ? String(row[proteinCol] || '').trim() : '';
+        const protein = proteinRaw.split(';')[0].trim();
         if (!baseLabel || effect === null || lower === null || upper === null) {
           return null;
         }
 
-        const label = model ? `${baseLabel} (${model})` : baseLabel;
+        const label = disease && protein ? `${protein} -> ${disease}` : baseLabel;
         const lowError = Math.max(0, effect - lower);
         const highError = Math.max(0, upper - effect);
 
@@ -136,13 +143,26 @@ export default function Visualization({ results }: VisualizationProps) {
           effect,
           error: [lowError, highError] as [number, number],
           pvalue,
+          disease,
+          protein,
         };
       })
-      .filter((row): row is ForestDatum => Boolean(row));
+      .filter((row): row is ForestDatum & { disease: string; protein: string } =>
+        Boolean(row)
+      );
 
-    const isCausality = csvData.filename.toLowerCase().includes('causality');
-    if (isCausality && pvalueCol && rows.length > 0) {
-      rows = rows.sort((a, b) => (a.pvalue ?? 1) - (b.pvalue ?? 1)).slice(0, 1);
+    if (isCausality && pvalueCol && rows.length > 0 && diseaseCol && proteinCol) {
+      const bestByPair = new Map<string, typeof rows[number]>();
+      rows.forEach((row) => {
+        const key = `${row.protein}||${row.disease}`;
+        const current = bestByPair.get(key);
+        if (!current || (row.pvalue ?? 1) < (current.pvalue ?? 1)) {
+          bestByPair.set(key, row);
+        }
+      });
+      rows = Array.from(bestByPair.values()).sort(
+        (a, b) => (a.pvalue ?? 1) - (b.pvalue ?? 1)
+      );
     } else {
       rows = rows.slice(0, 20);
     }
