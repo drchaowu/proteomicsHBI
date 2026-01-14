@@ -380,7 +380,7 @@ export default function Visualization({ results }: VisualizationProps) {
               <p className="text-sm text-slate-600">{block.effectLabel} with 95% CI</p>
             </div>
             {(() => {
-              const wrapChars = 34;
+              const wrapChars = 30;
               const longestWrapped = block.data.reduce((max, row) => {
                 const lines = wrapLabel(row.label, wrapChars);
                 const longestLine = lines.reduce(
@@ -389,8 +389,8 @@ export default function Visualization({ results }: VisualizationProps) {
                 );
                 return Math.max(max, longestLine);
               }, 0);
-              const labelWidth = Math.min(240, Math.max(120, longestWrapped * 6));
-              const leftMargin = labelWidth + 14;
+              const labelWidth = Math.min(200, Math.max(100, longestWrapped * 5.5));
+              const leftMargin = labelWidth + 8;
               return (
             <div className="w-full max-w-4xl mx-auto">
               <ResponsiveContainer width="100%" height={90 + block.data.length * 58}>
