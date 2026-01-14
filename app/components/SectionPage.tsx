@@ -163,7 +163,7 @@ export default function SectionPage({ title, enableDownload = false }: SectionPa
                 }
               />
           </aside>
-          <div className="flex-1 space-y-6">
+          <div className="flex-1 space-y-6 min-w-0">
             {hasSearched && (
               <div className="space-y-6">
                 {searchResults.length > 0 && (
@@ -214,12 +214,12 @@ export default function SectionPage({ title, enableDownload = false }: SectionPa
                   </div>
                 )}
                 {searchResults.length > 0 && viewMode !== 'table' && (
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 min-w-0">
                     <Visualization results={searchResults} />
                   </div>
                 )}
                 {viewMode !== 'figure' && (
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 min-w-0">
                     <ResultsTable results={searchResults} totalResults={totalResults} />
                   </div>
                 )}

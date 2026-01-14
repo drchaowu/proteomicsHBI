@@ -58,7 +58,10 @@ export default function ResultsTable({ results, totalResults }: ResultsTableProp
       </div>
 
       {results.map((csvData, idx) => (
-        <div key={idx} className="border border-slate-200 rounded-2xl overflow-hidden bg-white">
+        <div
+          key={idx}
+          className="border border-slate-200 rounded-2xl overflow-hidden bg-white min-w-0"
+        >
           <button
             onClick={() => setExpandedFile(expandedFile === csvData.filename ? null : csvData.filename)}
             className="w-full px-6 py-4 bg-slate-50 hover:bg-slate-100 transition-colors flex items-center justify-between"
@@ -85,8 +88,8 @@ export default function ResultsTable({ results, totalResults }: ResultsTableProp
           </button>
           
           {expandedFile === csvData.filename && (
-            <div className="p-6 overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200 tabular-nums">
+            <div className="p-6 overflow-x-scroll max-w-full scrollbar-visible">
+              <table className="min-w-max divide-y divide-slate-200 tabular-nums">
                 <thead className="bg-slate-50">
                   <tr>
                     {csvData.headers.map((header, hIdx) => (

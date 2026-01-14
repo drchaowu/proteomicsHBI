@@ -163,8 +163,6 @@ export default function Visualization({ results }: VisualizationProps) {
       rows = Array.from(bestByPair.values()).sort(
         (a, b) => (a.pvalue ?? 1) - (b.pvalue ?? 1)
       );
-    } else {
-      rows = rows.slice(0, 20);
     }
 
     if (rows.length === 0) {
@@ -227,11 +225,9 @@ export default function Visualization({ results }: VisualizationProps) {
 
     const rows = Array.from(rowCounts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 12)
       .map(([label]) => label);
     const cols = Array.from(colCounts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 12)
       .map(([label]) => label);
 
     if (rows.length === 0 || cols.length === 0) {
@@ -298,12 +294,14 @@ export default function Visualization({ results }: VisualizationProps) {
     );
   }
 
+  const heatmapColWidth = 68;
+
   return (
     <div className="space-y-8">
       {heatmapBlocks.map((block) => (
         <div key={`heatmap-${block.title}`} className="space-y-4">
           <h3 className="text-xl font-semibold text-slate-900">{block.title} heatmap</h3>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white p-4 rounded-lg border border-gray-200 overflow-x-auto">
             <div className="flex items-center justify-between gap-4 mb-4">
               <p className="text-sm text-slate-600">
                 {block.rowLabel} × {block.colLabel}
@@ -314,11 +312,11 @@ export default function Visualization({ results }: VisualizationProps) {
                 <span>{block.max.toFixed(2)}</span>
               </div>
             </div>
-            <div className="overflow-auto">
+            <div className="overflow-auto max-w-full">
               <div
-                className="grid gap-px bg-slate-200"
+                className="grid gap-px bg-slate-200 min-w-max"
                 style={{
-                  gridTemplateColumns: `180px repeat(${block.cols.length}, minmax(90px, 1fr))`,
+                  gridTemplateColumns: `180px repeat(${block.cols.length}, ${heatmapColWidth}px)`,
                 }}
               >
                 <div className="bg-white p-2 text-xs font-semibold text-slate-500">
@@ -327,7 +325,7 @@ export default function Visualization({ results }: VisualizationProps) {
                 {block.cols.map((col) => (
                   <div
                     key={`col-${col}`}
-                    className="bg-white p-2 text-xs font-semibold text-slate-600"
+                    className="bg-white p-2 text-[10px] font-semibold text-slate-600 leading-tight break-all whitespace-normal"
                   >
                     {col}
                   </div>
@@ -377,20 +375,34 @@ export default function Visualization({ results }: VisualizationProps) {
       {forestBlocks.map((block) => (
         <div key={`forest-${block.title}`} className="space-y-4">
           <h3 className="text-xl font-semibold text-slate-900">{block.title} forest plot</h3>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white p-4 rounded-lg border border-gray-200 overflow-x-auto">
             <div className="flex items-center justify-between gap-4 mb-4">
               <p className="text-sm text-slate-600">{block.effectLabel} with 95% CI</p>
             </div>
-            <ResponsiveContainer width="100%" height={90 + block.data.length * 58}>
-              <ScatterChart layout="vertical" margin={{ left: 230, right: 30 }}>
+            {(() => {
+              const wrapChars = 34;
+              const longestWrapped = block.data.reduce((max, row) => {
+                const lines = wrapLabel(row.label, wrapChars);
+                const longestLine = lines.reduce(
+                  (lineMax, line) => Math.max(lineMax, line.length),
+                  0
+                );
+                return Math.max(max, longestLine);
+              }, 0);
+              const labelWidth = Math.min(240, Math.max(120, longestWrapped * 6));
+              const leftMargin = labelWidth + 14;
+              return (
+            <div className="w-full max-w-4xl mx-auto">
+              <ResponsiveContainer width="100%" height={90 + block.data.length * 58}>
+                <ScatterChart layout="vertical" margin={{ left: leftMargin, right: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" dataKey="effect" />
                 <YAxis
                   type="category"
                   dataKey="label"
-                  width={210}
+                  width={labelWidth}
                   tick={({ x, y, payload }) => {
-                    const lines = wrapLabel(String(payload.value), 30);
+                    const lines = wrapLabel(String(payload.value), wrapChars);
                     return (
                       <text
                         x={x}
@@ -426,8 +438,11 @@ export default function Visualization({ results }: VisualizationProps) {
                 <Scatter data={block.data} fill="#0ea5e9">
                   <ErrorBar dataKey="error" width={4} direction="x" stroke="#0ea5e9" />
                 </Scatter>
-              </ScatterChart>
-            </ResponsiveContainer>
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+              );
+            })()}
           </div>
         </div>
       ))}
