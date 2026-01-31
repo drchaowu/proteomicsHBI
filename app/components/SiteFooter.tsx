@@ -6,7 +6,7 @@ export default function SiteFooter() {
           If you use data from this website, please cite: medRxiv 2026.01.26.26344874; doi:
           https://doi.org/10.64898/2026.01.26.26344874.
         </p>
-        <p className="text-xs text-slate-400">Version 0.1.1 · Released 2026-01-12</p>
+        <p className="text-xs text-slate-400">Version 0.2.0 · Released 2026-01-31</p>
       </div>
     </footer>
   );
