@@ -91,6 +91,31 @@ export default function Home() {
       </section>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-12">
+        <section className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 sm:p-8 grid gap-6 lg:grid-cols-[1.1fr_1.4fr] items-center">
+          <div className="space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
+              Study overview
+            </p>
+            <h3 className="text-2xl sm:text-3xl font-semibold text-slate-900">
+              A quick tour of Proteomics in Heart-Brain Interactions
+            </h3>
+            <p className="text-slate-600">
+              Watch the short overview to understand the study findings.
+            </p>
+          </div>
+          <div className="w-full">
+            <div className="aspect-video w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-sm">
+              <iframe
+                className="h-full w-full"
+                src="https://www.youtube.com/embed/XzbT1pHq4z8"
+                title="Study overview video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </section>
         {availableFiles.length === 0 && !isLoading && (
           <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800">
             <p className="font-semibold">No CSV files found.</p>

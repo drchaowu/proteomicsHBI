@@ -90,6 +90,10 @@ export default function AboutPage() {
               used for clinical decision-making.
             </p>
             <p className="text-slate-700">
+              If you use data from this website, please cite: medRxiv 2026.01.26.26344874; doi:
+              https://doi.org/10.64898/2026.01.26.26344874.
+            </p>
+            <p className="text-slate-700">
               Researchers interested in accessing or formally using these data are asked to contact
               the study team for approval. Please include:
             </p>
