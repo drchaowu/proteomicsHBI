@@ -61,7 +61,7 @@ export default function SearchBar({
     const normalizedFiles = availableFiles.map((file) => file.toLowerCase());
     const groupFiles =
       selectedGroup && selectedGroup.value !== 'all'
-        ? availableFiles.filter((file, index) => {
+        ? availableFiles.filter((_file, index) => {
             const lower = normalizedFiles[index];
             if (selectedGroup.files && selectedGroup.files.length > 0) {
               return selectedGroup.files.some((name) => name.toLowerCase() === lower);
@@ -156,7 +156,7 @@ export default function SearchBar({
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Search term
             </span>
-            <div className="flex items-center gap-3 px-4 h-12 bg-slate-50 border border-slate-200 rounded-2xl focus-within:ring-2 focus-within:ring-blue-500">
+            <div className="flex items-center gap-3 px-4 h-12 bg-slate-50 border border-slate-200 rounded-2xl transition-all hover:bg-white hover:border-slate-300 hover:shadow-md focus-within:bg-white focus-within:border-slate-300 focus-within:shadow-md">
               <svg
                 className="w-5 h-5 text-slate-500"
                 fill="none"
@@ -255,7 +255,7 @@ export default function SearchBar({
               <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Filter term
               </span>
-              <div className="flex items-center gap-3 px-4 h-12 bg-slate-50 border border-slate-200 rounded-2xl focus-within:ring-2 focus-within:ring-blue-500">
+              <div className="flex items-center gap-3 px-4 h-12 bg-slate-50 border border-slate-200 rounded-2xl transition-all hover:bg-white hover:border-slate-300 hover:shadow-md focus-within:bg-white focus-within:border-slate-300 focus-within:shadow-md">
                 <input
                   type="text"
                   value={filterTerm}
